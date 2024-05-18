@@ -1,43 +1,47 @@
+const { each } = require("jquery");
+
+// Initial call to recalculate service time
 recalculateServiceTime();
+
+// Hide elements with the class 'priority-only' at the start
 $('.priority-only').hide();
 
-$(document).ready(function () {
-  $('input[type=radio][name=algorithm]').change(function () {
-    if (this.value == 'priority') {
+// Add event listener for changes on radio buttons with name 'algorithm'
+document.addEventListener("change", function(event) { 
+  if (event.target.matches("input[type=radio][name=algorithm]")) {
+    // Show or hide priority input fields based on the selected algorithm
+    if (event.target.value == 'priority' || event.target.value == 'preemptive_priority') {
       $('.priority-only').show();
-      $('.servtime').show();
       $('#minus').css('left', '604px');
-    }
-    else {
+    } else {
       $('.priority-only').hide();
-      $('.servtime').show();
       $('#minus').css('left', '428px');
     }
 
-    if (this.value == 'robin') {
-      $('.servtime').hide();
+    // Show or hide quantum input field for round-robin algorithm
+    if (event.target.value == 'robin' ||event.target.value == 'srjf' ||event.target.value == 'preemptive_priority'  ) {
       $('#quantumParagraph').show();
-    }
-    else {
+    } else {
       $('#quantumParagraph').hide();
-      $('.servtime').show();
     }
 
+    // Recalculate service time when algorithm changes
     recalculateServiceTime();
-  });
+  }
 });
 
+// Function to add a new row to the input table
 function addRow() {
   var lastRow = $('#inputTable tr:last');
-  var lastRowNumebr = parseInt(lastRow.children()[1].innerText);
-console.log("row added");
+  var lastRowNumber = isNaN(parseInt(lastRow.children()[1].innerText)) ? -1 : parseInt(lastRow.children()[1].innerText);
+
   var newRow = '<tr><td>P'
-  + (lastRowNumebr + 1)
-  + '</td><td>'
-  + (lastRowNumebr + 1)
-  + '</td><td><input class="exectime" type="text"/></td><td class="servtime"></td>'
-  //if ($('input[name=algorithm]:checked', '#algorithm').val() == "priority")
-  + '<td class="priority-only"><input type="text"/></td></tr>';
+    + (lastRowNumber + 1)
+    + '</td><td>'
+    + (lastRowNumber + 1)
+    + '</td><td><input class="exectime" type="text"/></td>'
+    + '<td class="priority-only"><input type="text"/></td>'
+    + '<td><button onclick="deleteRow(this);">Delete</button></td></tr>';
 
   lastRow.after(newRow);
 
@@ -45,15 +49,20 @@ console.log("row added");
   minus.show();
   minus.css('top', (parseFloat(minus.css('top')) + 24) + 'px');
 
-  if ($('input[name=algorithm]:checked', '#algorithm').val() != "priority")
+  // Show or hide priority input fields based on the selected algorithm
+  if ($('input[name=algorithm]:checked', '#algorithm').val() != "priority" && $('input[name=algorithm]:checked', '#algorithm').val() != "preemptive_priority") {
     $('.priority-only').hide();
+  } else {
+    $('.priority-only').show();
+  }
 
-
+  // Recalculate service time when input values change
   $('#inputTable tr:last input').change(function () {
     recalculateServiceTime();
   });
 }
 
+// Function to delete the last row from the input table
 function deleteRow() {
   var lastRow = $('#inputTable tr:last');
   lastRow.remove();
@@ -61,195 +70,113 @@ function deleteRow() {
   var minus = $('#minus');
   minus.css('top', (parseFloat(minus.css('top')) - 24) + 'px');
 
-  if (parseFloat(minus.css('top')) < 150)
+  if (parseFloat(minus.css('top')) < 150) {
     minus.hide();
+  }
 }
 
-$(".initial").change(function () {
-  recalculateServiceTime();
-});
-
+// Function to recalculate the total service time based on the selected algorithm
 function recalculateServiceTime() {
   var inputTable = $('#inputTable tr');
-  var totalExectuteTime = 0;
+  var totalExecuteTime = 0;
 
   var algorithm = $('input[name=algorithm]:checked', '#algorithm').val();
+  
+  // First Come First Serve algorithm
   if (algorithm == "fcfs") {
-    $.each(inputTable, function (key, value) {
+    inputTable.each(function (key, value) {
       if (key == 0) return true;
-      $(value.children[3]).text(totalExectuteTime);
-
       var executeTime = parseInt($(value.children[2]).children().first().val());
-      totalExectuteTime += executeTime;
+      totalExecuteTime += executeTime;
     });
-  }
+  } 
+  // Shortest Job First algorithm
   else if (algorithm == "sjf") {
-    var exectuteTimes = [];
-    $.each(inputTable, function (key, value) {
+    var executeTimes = [];
+    inputTable.each(function (key, value) {
       if (key == 0) return true;
-      exectuteTimes[key - 1] = parseInt($(value.children[2]).children().first().val());
+      var executeTime = parseInt($(value.children[2]).children().first().val());
+      executeTimes.push(executeTime);
     });
 
-    var currentIndex = -1;
-    for (var i = 0; i < exectuteTimes.length; i++) {
-      currentIndex = findNextIndex(currentIndex, exectuteTimes);
-
-      if (currentIndex == -1) return;
-
-      $(inputTable[currentIndex + 1].children[3]).text(totalExectuteTime);
-
-      totalExectuteTime += exectuteTimes[currentIndex];
-    }
-  }
-  else if (algorithm == "priority") {
-    var exectuteTimes = [];
+    executeTimes.sort((a, b) => a - b);
+    executeTimes.forEach(time => {
+      totalExecuteTime += time;
+    });
+  } 
+  // Priority and Preemptive Priority algorithms
+  else if (algorithm == "priority" || algorithm == "preemptive_priority") {
+    var executeTimes = [];
     var priorities = [];
-
-    $.each(inputTable, function (key, value) {
+    inputTable.each(function (key, value) {
       if (key == 0) return true;
-      exectuteTimes[key - 1] = parseInt($(value.children[2]).children().first().val());
-      priorities[key - 1] = parseInt($(value.children[4]).children().first().val());
+      var executeTime = parseInt($(value.children[2]).children().first().val());
+      var priority = parseInt($(value.children[3]).children().first().val());
+      executeTimes.push(executeTime);
+      priorities.push(priority);
     });
 
-    var currentIndex = -1;
-    for (var i = 0; i < exectuteTimes.length; i++) {
-      currentIndex = findNextIndexWithPriority(currentIndex, priorities);
-
-      if (currentIndex == -1) return;
-
-      $(inputTable[currentIndex + 1].children[3]).text(totalExectuteTime);
-
-      totalExectuteTime += exectuteTimes[currentIndex];
-    }
-  }
+    var sorted = executeTimes.map((e, i) => ({ executeTime: e, priority: priorities[i] }))
+                             .sort((a, b) => a.priority - b.priority);
+    sorted.forEach(item => {
+      totalExecuteTime += item.executeTime;
+    });
+  } 
+  // Round Robin algorithm
   else if (algorithm == "robin") {
     $('#minus').css('left', '335px');
-    $.each(inputTable, function (key, value) {
+    inputTable.each(function (key, value) {
       if (key == 0) return true;
-      $(value.children[3]).text("");
+      var executeTime = parseInt($(value.children[2]).children().first().val());
+      totalExecuteTime += executeTime;
+    });
+  } 
+  // Shortest Remaining Job First algorithm
+  else if (algorithm == "srjf") {
+    var executeTimes = [];
+    inputTable.each(function (key, value) {
+      if (key == 0) return true;
+      var executeTime = parseInt($(value.children[2]).children().first().val());
+      executeTimes.push(executeTime);
+    });
+
+    executeTimes.sort((a, b) => a - b);
+    executeTimes.forEach(time => {
+      totalExecuteTime += time;
     });
   }
 }
 
-function findNextIndexWithPriority(currentIndex, priorities) {
-  var currentPriority = 1000000;
-  if (currentIndex != -1) currentPriority = priorities[currentIndex];
-  var resultPriority = 0;
-  var resultIndex = -1;
-  var samePriority = false;
-  var areWeThereYet = false;
-
-  $.each(priorities, function (key, value) {
-    var changeInThisIteration = false;
-
-    if (key == currentIndex) {
-      areWeThereYet = true;
-      return true;
-    }
-    if (value <= currentPriority && value >= resultPriority) {
-      if (value == resultPriority) {
-        if (currentPriority == value && !samePriority) {
-          samePriority = true;
-          changeInThisIteration = true;
-          resultPriority = value;
-          resultIndex = key;                            
-        }                        
-      }
-      else if (value == currentPriority) {
-        if (areWeThereYet) {
-          samePriority = true;
-          areWeThereYet = false;
-          changeInThisIteration = true;
-          resultPriority = value;
-          resultIndex = key;
-        }
-      }
-      else {
-        resultPriority = value;
-        resultIndex = key;
-      }
-
-      if (value > resultPriority && !changeInThisIteration)
-        samePriority = false;
-    }
-  });
-  return resultIndex;
-}
-
-function findNextIndex(currentIndex, array) {
-  var currentTime = 0;
-  if (currentIndex != -1) currentTime = array[currentIndex];            
-  var resultTime = 1000000;
-  var resultIndex = -1;
-  var sameTime = false;
-  var areWeThereYet = false;
-
-  $.each(array, function (key, value) {
-    var changeInThisIteration = false;
-
-    if (key == currentIndex) {
-      areWeThereYet = true;
-      return true;
-    }
-    if (value >= currentTime && value <= resultTime) {
-      if (value == resultTime) {                        
-        if (currentTime == value && !sameTime) {
-          sameTime = true;
-          changeInThisIteration = true;
-          resultTime = value;
-          resultIndex = key;                            
-        }                        
-      }
-      else if (value == currentTime) {
-        if (areWeThereYet) {
-          sameTime = true;
-          areWeThereYet = false;
-          changeInThisIteration = true;
-          resultTime = value;
-          resultIndex = key;
-        }
-      }
-      else {
-        resultTime = value;
-        resultIndex = key;
-      }
-
-      if (value < resultTime && !changeInThisIteration)
-        sameTime = false;
-    }
-  });
-  return resultIndex;
-}
-
+// Function to handle the animation
 function animate() {
-	$('fresh').prepend('<div id="curtain" style="position: absolute; right: 0; width:100%; height:100px;"></div>');
-  
+  $('fresh').prepend('<div id="curtain" style="position: absolute; right: 0; width:100%; height:100px;"></div>');
   $('#curtain').width($('#resultTable').width());
-  $('#curtain').css({left: $('#resultTable').position().left});
-  
+  $('#curtain').css({ left: $('#resultTable').position().left });
+
   var sum = 0;
   $('.exectime').each(function() {
-      sum += Number($(this).val());
+    var executeTime = Number($(this).val());
+    if (!isNaN(executeTime) && executeTime > 0) {
+      sum += executeTime;
+    }
   });
-  
-  console.log($('#resultTable').width());
+
   var distance = $("#curtain").css("width");
-  
   animationStep(sum, 0);
-  jQuery('#curtain').animate({ width: '0', marginLeft: distance}, sum*1000/2, 'linear');
+  jQuery('#curtain').animate({ width: '0', marginLeft: distance }, sum * 1000 / 2, 'linear');
 }
 
+// Function to update the timer during the animation
 function animationStep(steps, cur) {
-	$('#timer').html(cur);
-	if(cur < steps) {
-		setTimeout(function(){ 
-   	     animationStep(steps, cur + 1);
-  	}, 500);
-  }
-  else {
+  $('#timer').html(cur);
+  if (cur < steps) {
+    setTimeout(function() { 
+      animationStep(steps, cur + 1);
+    }, 500);
   }
 }
 
+// Function to draw the Gantt chart based on the selected algorithm
 function draw() {
   $('fresh').html('');
   var inputTable = $('#inputTable tr');
@@ -257,104 +184,103 @@ function draw() {
   var td = '';
 
   var algorithm = $('input[name=algorithm]:checked', '#algorithm').val();
+
+  // First Come First Serve algorithm
   if (algorithm == "fcfs") {
-    $.each(inputTable, function (key, value) {
+    inputTable.each(function (key, value) {
       if (key == 0) return true;
       var executeTime = parseInt($(value.children[2]).children().first().val());
-      th += '<th style="height: 60px; width: ' + executeTime * 20 + 'px;">P' + (key - 1) + '</th>';
-      td += '<td>' + executeTime + '</td>';
+      if (!isNaN(executeTime) && executeTime > 0) {
+        th += '<th style="height: 60px; width: ' + executeTime * 20 + 'px;">P' + (key - 1) + '</th>';
+        td += '<td>' + executeTime + '</td>';
+      }
     });
-
-    $('fresh').html('<table id="resultTable"><tr>'
-                    + th
-                    + '</tr><tr>'
-                    + td
-                    + '</tr></table>'
-                   );
-  }
+  } 
+  // Shortest Job First algorithm
   else if (algorithm == "sjf") {
     var executeTimes = [];
-
-    $.each(inputTable, function (key, value) {
+    inputTable.each(function (key, value) {
       if (key == 0) return true;
       var executeTime = parseInt($(value.children[2]).children().first().val());
-      executeTimes[key - 1] = { "executeTime": executeTime, "P": key - 1 };
+      executeTimes.push({ executeTime: executeTime, P: key - 1 });
     });
 
-    executeTimes.sort(function (a, b) {
-      if (a.executeTime == b.executeTime)
-        return a.P - b.P;
-      return a.executeTime - b.executeTime
-    });
-
-    $.each(executeTimes, function (key, value) {
+    executeTimes.sort((a, b) => a.executeTime - b.executeTime);
+    executeTimes.forEach(value => {
       th += '<th style="height: 60px; width: ' + value.executeTime * 20 + 'px;">P' + value.P + '</th>';
       td += '<td>' + value.executeTime + '</td>';
     });
-
-    $('fresh').html('<table id="resultTable"><tr>'
-                    + th
-                    + '</tr><tr>'
-                    + td
-                    + '</tr></table>'
-                   );
-  }
-  else if (algorithm == "priority") {
+  } 
+  // Priority and Preemptive Priority algorithms
+  else if (algorithm == "priority" || algorithm == "preemptive_priority") {
     var executeTimes = [];
-
+    var priorities = [];
     $.each(inputTable, function (key, value) {
-      if (key == 0) return true;
-      var executeTime = parseInt($(value.children[2]).children().first().val());
-      var priority = parseInt($(value.children[4]).children().first().val());
-      executeTimes[key - 1] = { "executeTime": executeTime, "P": key - 1, "priority": priority };
+        if (key == 0) return true;
+        var executeTime = parseInt($(value.children[2]).children().first().val());
+        var priority = parseInt($(value.children[3]).children().first().val());
+        executeTimes[key - 1] = { "executeTime": executeTime, "P": key - 1, "priority": priority };
     });
 
-    executeTimes.sort(function (a, b) {
-      if (a.priority == b.priority)
-        return a.P - b.P;
-      return b.priority - a.priority
-    });
-
-    $.each(executeTimes, function (key, value) {
-      th += '<th style="height: 60px; width: ' + value.executeTime * 20 + 'px;">P' + value.P + '</th>';
-      td += '<td>' + value.executeTime + '</td>';
+    executeTimes.sort((a, b) => a.priority - b.priority);
+    executeTimes.forEach(value => {
+        th += '<th style="height: 60px; width: ' + value.executeTime * 20 + 'px;">P' + value.P + '</th>';
+        td += '<td>' + value.executeTime + '</td>';
     });
 
     $('fresh').html('<table id="resultTable" style="width: 70%"><tr>'
-                    + th
-                    + '</tr><tr>'
-                    + td
-                    + '</tr></table>'
-                   );
-  }
+        + th
+        + '</tr><tr>'
+        + td
+        + '</tr></table>'
+    );
+  } 
+  // Round Robin algorithm
   else if (algorithm == "robin") {
-    var quantum = $('#quantum').val();
+    var quantum = parseInt($('#quantum').val());
     var executeTimes = [];
 
-    $.each(inputTable, function (key, value) {
+    inputTable.each(function (key, value) {
       if (key == 0) return true;
       var executeTime = parseInt($(value.children[2]).children().first().val());
-      executeTimes[key - 1] = { "executeTime": executeTime, "P": key - 1 };
+      executeTimes.push({ executeTime: executeTime, P: key - 1 });
     });
 
     var areWeThereYet = false;
     while (!areWeThereYet) {
       areWeThereYet = true;
-      $.each(executeTimes, function (key, value) {
+      executeTimes.forEach(value => {
         if (value.executeTime > 0) {
-          th += '<th style="height: 60px; width: ' + (value.executeTime > quantum ? quantum : value.executeTime) * 20 + 'px;">P' + value.P + '</th>';
-          td += '<td>' + (value.executeTime > quantum ? quantum : value.executeTime) + '</td>';
+          th += '<th style="height: 60px; width: ' + Math.min(quantum, value.executeTime) * 20 + 'px;">P' + value.P + '</th>';
+          td += '<td>' + Math.min(quantum, value.executeTime) + '</td>';
           value.executeTime -= quantum;
           areWeThereYet = false;
         }
       });
     }
-    $('fresh').html('<table id="resultTable" style="width: 70%"><tr>'
-                    + th
-                    + '</tr><tr>'
-                    + td
-                    + '</tr></table>'
-                   );
+  } 
+  // Shortest Remaining Job First algorithm
+  else if (algorithm == "srjf") {
+    var executeTimes = [];
+    var processDetails = [];
+
+    inputTable.each(function (key, value) {
+      if (key == 0) return true;
+      var executeTime = parseInt($(value.children[2]).children().first().val());
+      executeTimes.push(executeTime);
+      processDetails.push({ executeTime: executeTime, P: key - 1 });
+    });
+
+    executeTimes.sort((a, b) => a - b);
+    executeTimes.forEach(executeTime => {
+      var processDetail = processDetails.find(pd => pd.executeTime === executeTime);
+      if (!isNaN(executeTime) && executeTime > 0) {
+      th += '<th style="height: 60px; width: ' + executeTime * 20 + 'px;">P' + processDetail.P + '</th>';
+      td += '<td>' + executeTime + '</td>';
+      }
+    });
   }
+
+  $('fresh').html('<table id="resultTable" style="width: 70%"><tr>' + th + '</tr><tr>' + td + '</tr></table>');
   animate();
 }
