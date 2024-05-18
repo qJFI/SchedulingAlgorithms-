@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./assets/css/2.css">
+  <link rel="stylesheet" href="./assets/css/style.css">
+  <title>Document</title>
+  <script src="js/2.js"></script>
+
+</head>
+<body>
+  <section  class="dark-ground">
+    <script  src="js/navbar.js"></script>
+  </section>
+
+  <section class="float">
+  <form id="algorithm" class="radio-form">
+    <input checked=""  name="algorithm" value="fcfs" type="radio" id="a">
+    <label for="a"><span></span>FCFS</label>
+    <input  name="algorithm" type="radio" value="sjf" id="b">
+    <label for="b"><span></span>SJF</label>
+    <input  name="algorithm" type="radio" value="priority" id="c">
+    <label for="c"><span></span>Priority</label>
+    <input  name="algorithm" type="radio" value="robin" id="d">
+    <label for="d"><span></span>RR</label>
+    <div class="worm">
+      <div class="worm__segment"></div>
+    </div>
+  </form>
+</section>  
+  <div>
+    <div>
+      Algorithm:
+<!--       
+      <form id="algorithm" class="radio-form">
+        <label for="a"><span></span>FCFS</label>
+        <input type="radio" name="algorithm" value="fcfs" checked id="a"/> <br/>
+        <label for="a"><span></span>SJF</label>
+        <input type="radio" name="algorithm" value="sjf"  id="b"/> <br/>
+        <label for="a"><span></span>Priority scheduling</label>
+        <input type="radio" name="algorithm" value="priority"  id="c"/> <br/>
+        <label for="d"><span></span>Round Robin</label>
+        <input type="radio" name="algorithm" value="robin"  id="d"/>
+        <div class="worm">
+          <div class="worm__segment"></div>
+        </div>
+      </form> -->
+
+      
+      <br>
+    </div>
+      <table class="inputTable" id="inputTable">
+          <tr>
+              <th>Process</th>
+              <th>Arrival Time</th>
+              <th>Execute Time</th>
+              <th class="servtime">Service Time</th>
+              <th class="priority-only">Priority</th>
+          </tr>
+          <tr>
+              <td>P0</td>
+              <td>0</td>
+              <td><input class="initial exectime" type="text" value="5" /></td>
+              <td class="servtime"></td>
+              <td class="priority-only initial"><input type="text"/></td>
+          </tr>
+          <tr>
+              <td>P1</td>
+              <td>1</td>
+              <td><input class="initial exectime" value="3" /></td>
+              <td class="servtime"></td>
+              <td class="priority-only" ><input type="text"/></td>
+          </tr>
+      </table>
+      <input id="minus" style="display: inline; left: 428px; position: absolute; top: 170px;" type="button" value="-" onclick="deleteRow();" />
+      </div>
+      <input type="button" value="+" onclick="addRow();" />
+  <div>
+    </div>    
+      <p id="quantumParagraph" hidden>Quantum: 
+          <input style="width: 50px;" id="quantum" type="text" value="3" />
+      </p>
+      <input type="button" value="Go" onclick="draw();" />
+      <br/><br/>
+  
+      <fresh>
+      </fresh>
+      <p>
+      Timer: <strong id="timer"></strong> sec
+      </p>
+
+      
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="js/2.js"></script>
+
+  
+</html>
