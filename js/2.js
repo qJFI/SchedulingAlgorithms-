@@ -202,29 +202,55 @@ function draw() {
     });
 
     // Preemptive Priority Scheduling
-    if (algorithm == "priority") {
-      var quantum = parseInt($('#quantum').val());
-      var currentTime = 0;
-      var i=0;
-      while (executeTimes.some(p => p.executeTime > 0)) {
+    // if (algorithm == "priority") {
+    //   var quantum = parseInt($('#quantum').val());
+    //   var currentTime = 0;
+    //   var i=0;
+    //   while (executeTimes.some(p => p.executeTime > 0)) {
         
-          // Filter and sort processes that still have remaining execution time by priority
-          var availableProcesses = executeTimes.filter(p => p.executeTime > 0).sort((a, b) => a.priority - b.priority);
-          if (availableProcesses.length === 0) break;
+    //       // Filter and sort processes that still have remaining execution time by priority
+    //       var availableProcesses = executeTimes.filter(p => p.executeTime > 0).sort((a, b) => a.priority - b.priority);
+    //       if (availableProcesses.length === 0) break;
 
-          var currentProcess = availableProcesses[i];
-          var timeSlice = Math.min(currentProcess.executeTime, quantum);
+    //       var currentProcess = availableProcesses[i];
+    //       var timeSlice = Math.min(currentProcess.executeTime, quantum);
 
-          currentProcess.executeTime -= timeSlice;
-          currentTime += timeSlice;
+    //       currentProcess.executeTime -= timeSlice;
+    //       currentTime += timeSlice;
 
-          th += '<th style="height: 60px; width: ' + timeSlice * 20 + 'px;">P' + currentProcess.P + '</th>';
-          td += '<td>' + timeSlice + '</td>';
-          i++;
-          i%=availableProcesses.length;
-      }
+    //       th += '<th style="height: 60px; width: ' + timeSlice * 20 + 'px;">P' + currentProcess.P + '</th>';
+    //       td += '<td>' + timeSlice + '</td>';
+    //       i++;
+    //       i%=availableProcesses.length;
+    //   }
 
-    } else if (algorithm == "preemptive_priority") {
+    // } 
+
+    if (algorithm == "priority") {
+      var executeTimes = [];
+      var priorities = [];
+      $.each(inputTable, function (key, value) {
+          if (key == 0) return true;
+          var executeTime = parseInt($(value.children[2]).children().first().val());
+          var priority = parseInt($(value.children[3]).children().first().val());
+          executeTimes[key - 1] = { "executeTime": executeTime, "P": key - 1, "priority": priority };
+      });
+  
+      executeTimes.sort((a, b) => a.priority - b.priority);
+      executeTimes.forEach(value => {
+          th += '<th style="height: 60px; width: ' + value.executeTime * 20 + 'px;">P' + value.P + '</th>';
+          td += '<td>' + value.executeTime + '</td>';
+      });
+  
+      $('fresh').html('<table id="resultTable" style="width: 70%"><tr>'
+          + th
+          + '</tr><tr>'
+          + td
+          + '</tr></table>'
+      );
+
+    }
+      else if (algorithm == "preemptive_priority") {
       var quantum = parseInt($('#quantum').val());
       var executeTimes = [];
       var priorities = [];
