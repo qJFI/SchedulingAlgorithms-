@@ -6,29 +6,7 @@ recalculateServiceTime();
 // Hide elements with the class 'priority-only' at the start
 $('.priority-only').hide();
 
-// Add event listener for changes on radio buttons with name 'algorithm'
-document.addEventListener("change", function(event) { 
-  if (event.target.matches("input[type=radio][name=algorithm]")) {
-    // Show or hide priority input fields based on the selected algorithm
-    if (event.target.value == 'priority' || event.target.value == 'preemptive_priority') {
-      $('.priority-only').show();
-      $('#minus').css('left', '604px');
-    } else {
-      $('.priority-only').hide();
-      $('#minus').css('left', '428px');
-    }
 
-    // Show or hide quantum input field for round-robin algorithm
-    if (event.target.value == 'robin' ||event.target.value == 'srjf' ||event.target.value == 'preemptive_priority'  ) {
-      $('#quantumParagraph').show();
-    } else {
-      $('#quantumParagraph').hide();
-    }
-
-    // Recalculate service time when algorithm changes
-    recalculateServiceTime();
-  }
-});
 
 // Function to add a new row to the input table
 function addRow() {
