@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/2.css">
-  <link rel="stylesheet" href="./assets/css/style.css">
+
   <title>Document</title>
   <script src="js/2.js"></script>
 </head>
@@ -12,9 +13,15 @@
   <section class="dark-ground">
     <script src="js/navbar.js"></script>
   </section>
-
+  <div class="section1">
+    <h2 style="text-align: center;">CPU&nbsp;scheduler</h2>
+    <p  style="text-align: center;" class="lead">Type values into the table and the chart on the bottom
+      will show how this runs</p>
+  </div>
   <section class="float">
+<h1 style="margin: 20px;"> <pre>  Algorithms</pre></h1>
     <form id="algorithm" class="radio-form">
+      
       <input checked="" name="algorithm" value="fcfs" type="radio" id="a">
       <label for="a"><span></span>FCFS</label>
       <input name="algorithm" type="radio" value="sjf" id="b">
@@ -34,9 +41,10 @@
   </section>
   <div>
     <div>
-      Algorithm:
-      <br>
+    
     </div>
+
+  
     <table class="inputTable" id="inputTable">
       <tr>
         <th>Process</th>
@@ -60,20 +68,23 @@
         <td><button onclick="deleteRow(this);">Delete</button></td>
       </tr>
     </table>
-    <input type="button" value="+" onclick="addRow();" />
+  
+    <input class="plus" type="button" value="+" onclick="addRow();" />
     <div>
     </div>
     <p id="quantumParagraph" hidden>Quantum: 
       <input style="width: 50px;" id="quantum" type="text" value="3" />
     </p>
-    <input type="button" value="Go" onclick="draw();" />
-    <br/><br/>
-    <fresh>
-    </fresh>
+    
+    
     <p>
       Timer: <strong id="timer"></strong> sec
     </p>
-  </div>
+  </div><input class="go" type="button" value="Go" onclick="draw();" />
+  <br/><br/>
+  
+  <fresh style="margin-top: 50px;">
+  </fresh>
 </body>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -99,5 +110,10 @@ $(document).ready(function () {
 
     recalculateServiceTime();
   });
+
+  $('input[name=algorithm]').change(() => {
+  togglePriorityFields();
+  recalculateServiceTime();
+});
 });</script>
 </html>

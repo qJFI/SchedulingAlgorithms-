@@ -83,7 +83,7 @@ function recalculateServiceTime() {
     });
   } 
   // Priority and Preemptive Priority algorithms
-  else if (algorithm == "priority" || algorithm == "preemptive_priority") {
+  else if (algorithm == "priority" ) {
     var executeTimes = [];
     var priorities = [];
     inputTable.each(function (key, value) {
@@ -155,6 +155,7 @@ function animationStep(steps, cur) {
 }
 
 // Function to draw the Gantt chart based on the selected algorithm
+// Function to draw the Gantt chart based on the selected algorithm
 function draw() {
   $('fresh').html('');
   var inputTable = $('#inputTable tr');
@@ -200,11 +201,76 @@ function draw() {
         executeTimes[key - 1] = { "executeTime": executeTime, "P": key - 1, "priority": priority };
     });
 
-    executeTimes.sort((a, b) => a.priority - b.priority);
-    executeTimes.forEach(value => {
-        th += '<th style="height: 60px; width: ' + value.executeTime * 20 + 'px;">P' + value.P + '</th>';
-        td += '<td>' + value.executeTime + '</td>';
-    });
+    // Preemptive Priority Scheduling
+    if (algorithm == "priority") {
+      var quantum = parseInt($('#quantum').val());
+      var currentTime = 0;
+      var i=0;
+      while (executeTimes.some(p => p.executeTime > 0)) {
+        
+          // Filter and sort processes that still have remaining execution time by priority
+          var availableProcesses = executeTimes.filter(p => p.executeTime > 0).sort((a, b) => a.priority - b.priority);
+          if (availableProcesses.length === 0) break;
+
+          var currentProcess = availableProcesses[i];
+          var timeSlice = Math.min(currentProcess.executeTime, quantum);
+
+          currentProcess.executeTime -= timeSlice;
+          currentTime += timeSlice;
+
+          th += '<th style="height: 60px; width: ' + timeSlice * 20 + 'px;">P' + currentProcess.P + '</th>';
+          td += '<td>' + timeSlice + '</td>';
+          i++;
+          i%=availableProcesses.length;
+      }
+
+    } else if (algorithm == "preemptive_priority") {
+      var quantum = parseInt($('#quantum').val());
+      var executeTimes = [];
+      var priorities = [];
+      var processDetails = [];
+      
+      inputTable.each(function (key, value) {
+          if (key == 0) return true;
+          var executeTime = parseInt($(value.children[2]).children().first().val());
+          var priority = parseInt($(value.children[3]).children().first().val());
+          processDetails.push({ executeTime: executeTime, priority: priority, P: key - 1 });
+      });
+  
+      var currentTime = 0;
+      while (processDetails.some(p => p.executeTime > 0)) {
+          // Filter and sort processes that still have remaining execution time by priority
+          var availableProcesses = processDetails.filter(p => p.executeTime > 0).sort((a, b) => a.priority - b.priority);
+          availableProcesses.sort((a, b) => a.priority - b.priority);
+          if (availableProcesses.length === 0) break;
+  
+        
+          var currentProcess = availableProcesses[0];
+          var timeSlice = Math.min(currentProcess.executeTime, quantum);
+  
+          currentProcess.executeTime -= timeSlice;
+          currentTime += timeSlice;
+  
+          th += '<th style="height: 60px; width: ' + timeSlice * 20 + 'px;">P' + currentProcess.P + '</th>';
+          td += '<td>' + timeSlice + '</td>';
+        
+          
+          if( currentProcess.executeTime>0)
+          {
+                if(currentProcess.priority ==availableProcesses[1].priority )
+                {
+                  console.log("in");
+                  var swap = availableProcesses[0];
+                  availableProcesses[0] = availableProcesses[1]
+                  availableProcesses[1]=swap;
+                }
+          }
+      }
+  
+      $('fresh').html('<table id="resultTable" style="width: 70%"><tr>' + th + '</tr><tr>' + td + '</tr></table>');
+      animate();
+    }
+  
 
     $('fresh').html('<table id="resultTable" style="width: 70%"><tr>'
         + th
@@ -224,15 +290,16 @@ function draw() {
       executeTimes.push({ executeTime: executeTime, P: key - 1 });
     });
 
-    var areWeThereYet = false;
-    while (!areWeThereYet) {
-      areWeThereYet = true;
+    var allDone = false;
+    while (!allDone) {
+      allDone = true;
       executeTimes.forEach(value => {
         if (value.executeTime > 0) {
-          th += '<th style="height: 60px; width: ' + Math.min(quantum, value.executeTime) * 20 + 'px;">P' + value.P + '</th>';
-          td += '<td>' + Math.min(quantum, value.executeTime) + '</td>';
-          value.executeTime -= quantum;
-          areWeThereYet = false;
+          var timeSlice = Math.min(quantum, value.executeTime);
+          th += '<th style="height: 60px; width: ' + timeSlice * 20 + 'px;">P' + value.P + '</th>';
+          td += '<td>' + timeSlice + '</td>';
+          value.executeTime -= timeSlice;
+          if (value.executeTime > 0) allDone = false;
         }
       });
     }
@@ -249,16 +316,27 @@ function draw() {
       processDetails.push({ executeTime: executeTime, P: key - 1 });
     });
 
-    executeTimes.sort((a, b) => a - b);
-    executeTimes.forEach(executeTime => {
-      var processDetail = processDetails.find(pd => pd.executeTime === executeTime);
-      if (!isNaN(executeTime) && executeTime > 0) {
-      th += '<th style="height: 60px; width: ' + executeTime * 20 + 'px;">P' + processDetail.P + '</th>';
-      td += '<td>' + executeTime + '</td>';
-      }
-    });
+    executeTimes.sort((a, b) => a.executeTime - b.executeTime);
+    var remainingTimes = executeTimes.slice();
+    remainingTimes.sort((a, b) => a.executeTime - b.executeTime);
+    var currentTime = 0;
+    
+    while (remainingTimes.some(time => time > 0)) {
+      var minTime = Math.min(...remainingTimes.filter(time => time > 0));
+      currentTime += minTime;
+      remainingTimes = remainingTimes.map(time => time > 0 ? time - minTime : 0);
+      
+      processDetails.forEach(pd => {
+        if (pd.executeTime > 0) {
+          pd.executeTime -= minTime;
+          if (pd.executeTime < 0) pd.executeTime = 0;
+          th += '<th style="height: 60px; width: ' + minTime * 20 + 'px;">P' + pd.P + '</th>';
+          td += '<td>' + minTime + '</td>';
+        }
+      });
+    }
   }
 
-  $('fresh').html('<table id="resultTable" style="width: 70%"><tr>' + th + '</tr><tr>' + td + '</tr></table>');
+  $('fresh').html('<table class="outputTable" id="resultTable" style="width: 70%"><tr>' + th + '</tr><tr>' + td + '</tr></table>');
   animate();
 }
