@@ -201,30 +201,7 @@ function draw() {
         executeTimes[key - 1] = { "executeTime": executeTime, "P": key - 1, "priority": priority };
     });
 
-    // Preemptive Priority Scheduling
-    // if (algorithm == "priority") {
-    //   var quantum = parseInt($('#quantum').val());
-    //   var currentTime = 0;
-    //   var i=0;
-    //   while (executeTimes.some(p => p.executeTime > 0)) {
-        
-    //       // Filter and sort processes that still have remaining execution time by priority
-    //       var availableProcesses = executeTimes.filter(p => p.executeTime > 0).sort((a, b) => a.priority - b.priority);
-    //       if (availableProcesses.length === 0) break;
 
-    //       var currentProcess = availableProcesses[i];
-    //       var timeSlice = Math.min(currentProcess.executeTime, quantum);
-
-    //       currentProcess.executeTime -= timeSlice;
-    //       currentTime += timeSlice;
-
-    //       th += '<th style="height: 60px; width: ' + timeSlice * 20 + 'px;">P' + currentProcess.P + '</th>';
-    //       td += '<td>' + timeSlice + '</td>';
-    //       i++;
-    //       i%=availableProcesses.length;
-    //   }
-
-    // } 
 
     if (algorithm == "priority") {
       var executeTimes = [];
@@ -251,59 +228,40 @@ function draw() {
 
     }
       else if (algorithm == "preemptive_priority") {
-      var quantum = parseInt($('#quantum').val());
-      var executeTimes = [];
-      var priorities = [];
-      var processDetails = [];
-      
-      inputTable.each(function (key, value) {
-          if (key == 0) return true;
-          var executeTime = parseInt($(value.children[2]).children().first().val());
-          var priority = parseInt($(value.children[3]).children().first().val());
-          processDetails.push({ executeTime: executeTime, priority: priority, P: key - 1 });
-      });
-  
-      var currentTime = 0;
-      while (processDetails.some(p => p.executeTime > 0)) {
-          // Filter and sort processes that still have remaining execution time by priority
-          var availableProcesses = processDetails.filter(p => p.executeTime > 0).sort((a, b) => a.priority - b.priority);
-          availableProcesses.sort((a, b) => a.priority - b.priority);
-          if (availableProcesses.length === 0) break;
-  
+        var quantum = parseInt($('#quantum').val());
+          var currentTime = 0;
+          var i=0;
+          while (executeTimes.some(p => p.executeTime > 0)) {
+            // Filter and sort processes that still have remaining execution time by remaining time
+            var availableProcesses = executeTimes.filter(p => p.executeTime > 0).sort((a, b) => a.executeTime - b.executeTime);
         
-          var currentProcess = availableProcesses[0];
-          var timeSlice = Math.min(currentProcess.executeTime, quantum);
-  
-          currentProcess.executeTime -= timeSlice;
-          currentTime += timeSlice;
-  
-          th += '<th style="height: 60px; width: ' + timeSlice * 20 + 'px;">P' + currentProcess.P + '</th>';
-          td += '<td>' + timeSlice + '</td>';
+            // If no processes are available, break the loop
+            if (availableProcesses.length === 0) break;
         
-          
-          if( currentProcess.executeTime>0)
-          {
-                if(currentProcess.priority ==availableProcesses[1].priority )
-                {
-                  console.log("in");
-                  var swap = availableProcesses[0];
-                  availableProcesses[0] = availableProcesses[1]
-                  availableProcesses[1]=swap;
-                }
-          }
-      }
-  
-      $('fresh').html('<table id="resultTable" style="width: 70%"><tr>' + th + '</tr><tr>' + td + '</tr></table>');
-      animate();
+            // Select the process with the smallest remaining time
+            var currentProcess = availableProcesses[0];
+            var timeSlice = Math.min(currentProcess.executeTime, quantum);  // SRTF works by decreasing the remaining time of the current process by quantum time unit or process time less than quantom
+        
+            // Decrement the remaining execution time of the current process
+            currentProcess.executeTime -= timeSlice;
+            currentTime += timeSlice;
+        
+            // Add to the Gantt chart
+            th += '<th style="height: 60px; width: ' + timeSlice * 20 + 'px;">P' + currentProcess.P + '</th>';
+            td += '<td>' + timeSlice + '</td>';
+        
+            // Check if the process is completed
+            if (currentProcess.executeTime === 0) {
+                currentProcess.completionTime = currentTime;
+                currentProcess.turnaroundTime = currentProcess.completionTime - currentProcess.arrivalTime;
+                currentProcess.waitingTime = currentProcess.turnaroundTime - currentProcess.burstTime;
+            }
+        }
+        
     }
   
 
-    $('fresh').html('<table id="resultTable" style="width: 70%"><tr>'
-        + th
-        + '</tr><tr>'
-        + td
-        + '</tr></table>'
-    );
+  
   } 
   // Round Robin algorithm
   else if (algorithm == "robin") {
@@ -332,36 +290,40 @@ function draw() {
   } 
   // Shortest Remaining Job First algorithm
   else if (algorithm == "srjf") {
+    var quantum = parseInt($('#quantum').val());
     var executeTimes = [];
     var processDetails = [];
 
     inputTable.each(function (key, value) {
-      if (key == 0) return true;
-      var executeTime = parseInt($(value.children[2]).children().first().val());
-      executeTimes.push(executeTime);
-      processDetails.push({ executeTime: executeTime, P: key - 1 });
+        if (key == 0) return true;
+        var executeTime = parseInt($(value.children[2]).children().first().val());
+        executeTimes.push(executeTime);
+        processDetails.push({ executeTime: executeTime, P: key - 1 });
     });
 
-    executeTimes.sort((a, b) => a.executeTime - b.executeTime);
-    var remainingTimes = executeTimes.slice();
-    remainingTimes.sort((a, b) => a.executeTime - b.executeTime);
+    processDetails.sort((a, b) => a.executeTime - b.executeTime);
+    var remainingTimes = processDetails.map(pd => pd.executeTime);
+
     var currentTime = 0;
-    
+
     while (remainingTimes.some(time => time > 0)) {
-      var minTime = Math.min(...remainingTimes.filter(time => time > 0));
-      currentTime += minTime;
-      remainingTimes = remainingTimes.map(time => time > 0 ? time - minTime : 0);
-      
-      processDetails.forEach(pd => {
-        if (pd.executeTime > 0) {
-          pd.executeTime -= minTime;
-          if (pd.executeTime < 0) pd.executeTime = 0;
-          th += '<th style="height: 60px; width: ' + minTime * 20 + 'px;">P' + pd.P + '</th>';
-          td += '<td>' + minTime + '</td>';
-        }
-      });
+        var activeProcessIndex = remainingTimes.findIndex(time => time > 0);
+        var activeProcess = processDetails[activeProcessIndex];
+        var minTime = Math.min(quantum, activeProcess.executeTime);
+
+        currentTime += minTime;
+        remainingTimes[activeProcessIndex] -= minTime;
+
+        processDetails.forEach(pd => {
+            if (pd.P == activeProcess.P) {
+                pd.executeTime -= minTime;
+                if (pd.executeTime < 0) pd.executeTime = 0;
+                th += '<th style="height: 60px; width: ' + minTime * 20 + 'px;">P' + pd.P + '</th>';
+                td += '<td>' + minTime + '</td>';
+            }
+        });
     }
-  }
+}
 
   $('fresh').html('<table class="outputTable" id="resultTable" style="width: 70%"><tr>' + th + '</tr><tr>' + td + '</tr></table>');
   animate();
