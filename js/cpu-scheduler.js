@@ -489,8 +489,6 @@ $(document).ready(function () {
 		}
 
 
-
-
 	}
 	function SJF() {
 		sortArriveTimes();
@@ -510,56 +508,28 @@ $(document).ready(function () {
 	}
 
 	//Shortes Remaining Job First algorithm
-	function SRJF() {
+  function SRJF() {
+    function executeQuantum(proccessIndex, quantum) {
+        var remainingBurst = processArray[proccessIndex].burstTime;
+        var executionTime = Math.min(remainingBurst, quantum);
+        
+        processArray[proccessIndex].burstTime -= executionTime;
+        bar.addItem(processArray[proccessIndex].processName, executionTime);
+        position += executionTime;
 
+        if (processArray[proccessIndex].burstTime <= 0) {
+            processArray[proccessIndex].finished();
+        }
+    }
 
-		function findNextJump(proccessIndex) {
-			var interruptFound = false;
+    sortArriveTimes();
+    while (isDone() == false) {
+        fillGaps();
 
-			for (var i = 0; i < processArray.length; i++) {
-				if (processArray[i].done == false
-					&& processArray[i].arrivalTime < position + processArray[proccessIndex].burstTime
-					&& processArray[i].arrivalTime > processArray[proccessIndex].arrivalTime
-					&& processArray[i].burstTime < processArray[proccessIndex].burstTime
-					&& i != proccessIndex
-					&& processArray[i].hasStarted == false) {
-					// console.log("interupted by:"+processArray[i].processName);
-					processArray[proccessIndex].burstTime -= processArray[i].arrivalTime - position;
-					bar.addItem(processArray[proccessIndex].processName, processArray[i].arrivalTime - position);
-					processArray[proccessIndex].hasStarted = true;
-					interruptFound = true;
-					break;
-				}
-
-
-			}
-
-			if (interruptFound == false) {
-				bar.addItem(processArray[proccessIndex].processName, processArray[proccessIndex].burstTime);
-				processArray[proccessIndex].finished();
-			}
-
-		}
-
-		sortArriveTimes();
-		while (isDone() == false) {
-
-
-			fillGaps();
-
-			var i = findSmallestBurstIndex();
-
-			// console.log("starting:"+processArray[i].processName);
-
-			findNextJump(i);
-
-
-
-
-
-		}
-
-	}
+        var i = findSmallestBurstIndex();
+        executeQuantum(i, timeQuantum);
+    }
+}
 
 	function priority() {
 
@@ -610,6 +580,44 @@ $(document).ready(function () {
 		}
 
 	}
+  function preemptivePriority() {
+    function executeQuantum(proccessIndex, quantum) {
+        var remainingBurst = processArray[proccessIndex].burstTime;
+        var executionTime = Math.min(remainingBurst, quantum);
+        
+        processArray[proccessIndex].burstTime -= executionTime;
+        bar.addItem(processArray[proccessIndex].processName, executionTime);
+        position += executionTime;
+
+        if (processArray[proccessIndex].burstTime <= 0) {
+            processArray[proccessIndex].finished();
+        }
+    }
+
+    sortArriveTimes();
+    while (isDone() == false) {
+        fillGaps();
+
+        var i = findHighestPriorityIndex();
+        executeQuantum(i, timeQuantum);
+    }
+}
+
+
+function findHighestPriorityIndex() {
+    var minPriority = Number.MAX_VALUE;
+    var index = -1;
+
+    for (var i = 0; i < processArray.length; i++) {
+        if (processArray[i].done == false
+            && processArray[i].arrivalTime <= position
+            && processArray[i].priority < minPriority) {
+            minPriority = processArray[i].priority;
+            index = i;
+        }
+    }
+    return index;
+}
 
 	function roundRobin() {
 
@@ -710,10 +718,16 @@ $(document).ready(function () {
 				processTotal = processArray;
 				tq = timeQuantum;
 			}
+      else if (algorithm=="Preemptive Priority")
+        {
+          preemptivePriority();
+          $(".priority").collapse("show");
+          processTotal = processArray;
+          tq = timeQuantum;
+        }
+      
 
-
-
-			if (algorithm == "Priority") {
+			else if (algorithm == "Priority") {
 				$(".priority").collapse("show");
 				$("#algorithm_explanation").text("Priority Scheduling will execute each process according to the assigned priority. In this case a lower priority number is better.");
 				priority();
@@ -911,25 +925,7 @@ $(document).ready(function () {
 
 
 
-	//when you click on the algorithm dropdown
-	$(".algorithm_dropdown li a").click(function () {
-		$("#algorithm_button").html($(this).attr("calcStyle") + ' <span class="caret">');
-		algorithm = $(this).attr("calcStyle");
 
-		if (algorithm == "Round Robin") {
-			$("#solver_group").removeClass("hidden");
-		}
-		else {
-			$("#solver_group").addClass("hidden");
-		}
-
-		if (algorithm != "Priority") {
-			$(".priority").collapse("hide");
-		}
-
-		run();
-
-	})
 
 
 

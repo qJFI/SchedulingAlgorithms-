@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./assets/css/style.css">
+  <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/2.css">
-
   <title>Document</title>
   <script src="js/2.js"></script>
 </head>
@@ -14,14 +13,12 @@
     <script src="js/navbar.js"></script>
   </section>
   <div class="section1">
-    <h2 >CPU&nbsp;scheduler</h2>
-    <p   class="lead">Type values into the table and the chart on the bottom
-      will show how this runs</p>
+    <h2>CPU&nbsp;scheduler</h2>
+    <p class="lead">Type values into the table and the chart on the bottom will show how this runs</p>
   </div>
   <div class="float">
-<h1 style="margin: 20px;"> <pre>  Algorithms</pre></h1>
+    <h1 style="margin: 20px;"><pre>  Algorithms</pre></h1>
     <form id="algorithm" class="radio-form">
-      
       <input checked="" name="algorithm" value="fcfs" type="radio" id="a">
       <label for="a"><span></span>FCFS</label>
       <input name="algorithm" type="radio" value="sjf" id="b">
@@ -40,11 +37,7 @@
     </form>
   </div>
   <div>
-    <div>
-    
-    </div>
-
-  
+    <div></div>
     <table class="inputTable" id="inputTable">
       <tr>
         <th>Process</th>
@@ -55,6 +48,7 @@
       </tr>
       <tr>
         <td>P0</td>
+        <!-- <td><input type="text" value="0" /></td> -->
         <td>0</td>
         <td><input class="initial exectime" type="text" value="5" /></td>
         <td class="priority-only initial"><input type="text"/></td>
@@ -62,57 +56,53 @@
       </tr>
       <tr>
         <td>P1</td>
+        <!-- <td><input type="text" value="0" /></td> -->
         <td>1</td>
         <td><input class="initial exectime" value="3" /></td>
         <td class="priority-only"><input type="text"/></td>
         <td><button onclick="deleteRow(this);">Delete</button></td>
       </tr>
     </table>
-  
     <input class="plus" type="button" value="+" onclick="addRow();" />
-    <div>
-    </div>
+    <div></div>
     <p id="quantumParagraph" hidden>Quantum: 
       <input style="width: 50px;" id="quantum" type="text" value="3" />
     </p>
-    
-    
-    <p>
-      Timer: <strong id="timer"></strong> sec
-    </p>
-  </div><input class="go" type="button" value="Go" onclick="draw();" />
+    <p>Timer: <strong id="timer"></strong> sec</p>
+  </div>
+  <input class="go" type="button" value="Go" onclick="draw();" />
   <br/><br/>
-  
-  <fresh style="margin-top: 50px;">
-  </fresh>
+  <fresh style="margin-top: 50px;"></fresh>
+  <div style="margin-top: 50px;">
+    <h4>Average Waiting Time: <span id="avgWaitTime"></span> ms</h4>
+    <h4>Average Turnaround Time: <span id="avgTurnaroundTime"></span> ms</h4>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="js/2.js"></script>
+  <script>
+    $(function () {
+      $('input[type=radio][name=algorithm]').change(function () {
+        if (this.value == 'priority' || this.value == 'preemptive_priority') {
+          $('.priority-only').show();
+          $('#minus').css('left', '604px');
+        } else {
+          $('.priority-only').hide();
+          $('#minus').css('left', '428px');
+        }
+
+        if (this.value == 'robin' || this.value == 'srjf' || this.value == 'preemptive_priority') {
+          $('#quantumParagraph').show();
+        } else {
+          $('#quantumParagraph').hide();
+        }
+
+        recalculateServiceTime();
+      });
+
+      $('input[name=algorithm]').change(() => {
+        recalculateServiceTime();
+      });
+    });
+  </script>
 </body>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="js/2.js"></script>
-
-
-<script>
-$(document).ready(function () {
-  $('input[type=radio][name=algorithm]').change(function () {
-    if (this.value == 'priority' || this.value == 'preemptive_priority') {
-      $('.priority-only').show();
-      $('#minus').css('left', '604px');
-    } else {
-      $('.priority-only').hide();
-      $('#minus').css('left', '428px');
-    }
-
-    if (event.target.value == 'robin' ||event.target.value == 'srjf' ||event.target.value == 'preemptive_priority'  ) {
-      $('#quantumParagraph').show();
-    } else {
-      $('#quantumParagraph').hide();
-    }
-
-    recalculateServiceTime();
-  });
-
-  $('input[name=algorithm]').change(() => {
-  recalculateServiceTime();
-});
-});</script>
 </html>

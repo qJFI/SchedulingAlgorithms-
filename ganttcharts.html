@@ -218,6 +218,7 @@
               <li><a calcStyle="SRJF" id="fancy_calc">Shortest Remaing Job First (premptive)</a></li>
               <li><a calcStyle="Round Robin" id="fast_calc">Round Robin</a></li>
               <li><a calcStyle="Priority" id="fast_calc">Priority</a></li>
+              <li><a calcStyle="Preemptive Priority" id="fast_calc">Preemptive Priority</a></li>
             </ul>
           </div>
 
@@ -407,6 +408,34 @@
 
   
   <!-- <script src="js/new.js"></script> -->
+<script>
+    var algorithm = "FCFS"; // Initializing the algorithm variable
+
+    $(".algorithm_dropdown li a").click(function () {
+      var selectedAlgorithm = $(this).attr("calcStyle");
+      $("#algorithm_button").html(selectedAlgorithm + ' <span class="caret"></span>');
+      algorithm = selectedAlgorithm;
+
+      console.log("Selected Algorithm:", algorithm); // Debugging line
+
+      if (algorithm == "Round Robin" || algorithm == "SRJF" || algorithm == "Preemptive Priority") {
+        $("#solver_group").removeClass("hidden");
+      } else {
+        $("#solver_group").addClass("hidden");
+      }
+
+      if (algorithm != "Priority") {
+        $(".priority").collapse("hide");
+      }
+
+      run();
+    });
+
+    function run() {
+      console.log("Running with algorithm:", algorithm); // Debugging line
+      // Your run logic here
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.0.0/chartjs-plugin-datalabels.min.js"
     integrity="sha512-R/QOHLpV1Ggq22vfDAWYOaMd5RopHrJNMxi8/lJu8Oihwi4Ho4BRFeiMiCefn9rasajKjnx9/fTQ/xkWnkDACg=="

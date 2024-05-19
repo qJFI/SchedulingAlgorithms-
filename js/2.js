@@ -11,12 +11,13 @@ $('.priority-only').hide();
 // Function to add a new row to the input table
 function addRow() {
   var lastRow = $('#inputTable tr:last');
-  var lastRowNumber = isNaN(parseInt(lastRow.children()[1].innerText)) ? -1 : parseInt(lastRow.children()[1].innerText);
+  var lastRowNumber = $('#inputTable tr').length-2;
+
 
   var newRow = '<tr><td>P'
     + (lastRowNumber + 1)
     + '</td><td>'
-    + (lastRowNumber + 1)
+    + '<input  type="text" value="0" />'
     + '</td><td><input class="exectime" type="text"/></td>'
     + '<td class="priority-only"><input type="text"/></td>'
     + '<td><button onclick="deleteRow(this);">Delete</button></td></tr>';
@@ -34,11 +35,9 @@ function addRow() {
     $('.priority-only').show();
   }
 
-  // Recalculate service time when input values change
-  $('#inputTable tr:last input').change(function () {
-    recalculateServiceTime();
-  });
+  
 }
+
 
 // Function to delete the last row from the input table
 function deleteRow() {
@@ -186,8 +185,10 @@ function draw() {
 
     executeTimes.sort((a, b) => a.executeTime - b.executeTime);
     executeTimes.forEach(value => {
+      if (!isNaN(value.executeTime) && value.executeTime > 0) {
       th += '<th style="height: 60px; width: ' + value.executeTime * 20 + 'px;">P' + value.P + '</th>';
       td += '<td>' + value.executeTime + '</td>';
+      }
     });
   } 
   // Priority and Preemptive Priority algorithms
@@ -215,8 +216,10 @@ function draw() {
   
       executeTimes.sort((a, b) => a.priority - b.priority);
       executeTimes.forEach(value => {
+        if (!isNaN(value.executeTime) && value.executeTime > 0) {
           th += '<th style="height: 60px; width: ' + value.executeTime * 20 + 'px;">P' + value.P + '</th>';
           td += '<td>' + value.executeTime + '</td>';
+        }
       });
   
       $('fresh').html('<table id="resultTable" style="width: 70%"><tr>'
@@ -233,8 +236,10 @@ function draw() {
           var i=0;
           while (executeTimes.some(p => p.executeTime > 0)) {
             // Filter and sort processes that still have remaining execution time by remaining time
-            var availableProcesses = executeTimes.filter(p => p.executeTime > 0).sort((a, b) => a.executeTime - b.executeTime);
+            var availableProcesses = executeTimes.filter(p => p.executeTime > 0).sort((a, b) => a.priority - b.priority);
         
+              
+
             // If no processes are available, break the loop
             if (availableProcesses.length === 0) break;
         
@@ -249,13 +254,15 @@ function draw() {
             // Add to the Gantt chart
             th += '<th style="height: 60px; width: ' + timeSlice * 20 + 'px;">P' + currentProcess.P + '</th>';
             td += '<td>' + timeSlice + '</td>';
-        
+            executeTimes.push(executeTimes.shift());
             // Check if the process is completed
             if (currentProcess.executeTime === 0) {
                 currentProcess.completionTime = currentTime;
                 currentProcess.turnaroundTime = currentProcess.completionTime - currentProcess.arrivalTime;
                 currentProcess.waitingTime = currentProcess.turnaroundTime - currentProcess.burstTime;
             }
+
+          
         }
         
     }
@@ -328,3 +335,4 @@ function draw() {
   $('fresh').html('<table class="outputTable" id="resultTable" style="width: 70%"><tr>' + th + '</tr><tr>' + td + '</tr></table>');
   animate();
 }
+
