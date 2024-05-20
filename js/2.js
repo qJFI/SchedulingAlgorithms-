@@ -39,7 +39,7 @@ function draw() {
   const inputRows = $('#inputTable tr').not(':first');
   let processes = inputRows.toArray().map((row, index) => ({
     process: `P${index}`,
-    arrivalTime: parseInt($(row).find('.arrivalTime').text()) || 0,
+    arrivalTime: parseInt($(row).find('.arrivalTime').val()) || 0,
     executeTime: parseInt($(row).find('.exectime').val()) || 0,
     priority: parseInt($(row).find('.priority-only input').val()) || 0,
     remainingTime: parseInt($(row).find('.exectime').val()) || 0 // for preemptive algorithms
@@ -48,19 +48,18 @@ function draw() {
 
   switch (selectedAlgorithm) {
     case 'fcfs':
-      processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+      processes = fcfs(processes);
       break;
     case 'sjf':
-      processes.sort((a, b) => a.executeTime - b.executeTime);
+      processes = sjf(processes);
       break;
     case 'priority':
-      processes.sort((a, b) => a.priority - b.priority);
+      processes = priority(processes);
       break;
     case 'robin':
       processes = roundRobin(processes, parseInt($('#quantum').val()));
       break;
     case 'srjf':
-      processes.sort((a, b) => a.executeTime - b.executeTime);
       processes = srjf(processes, parseInt($('#quantum').val()));
       break;
     case 'preemptive_priority':
@@ -71,6 +70,72 @@ function draw() {
   const ganttChart = generateGanttChart(processes);
   $('fresh').html(ganttChart);
   animate();
+}
+
+
+
+function fcfs(processes) {
+  let result = [];
+  let time = 0;
+
+  processes.sort((a, b) => a.arrivalTime - b.arrivalTime); // Sort by arrival time
+
+  processes.forEach(process => {
+    if (time < process.arrivalTime) {
+      time = process.arrivalTime; // Wait for the process to arrive if there's idle time
+    }
+    
+    result.push({
+      process: process.process,
+      executeTime: process.executeTime,
+      startTime: time,
+      endTime: time + process.executeTime
+    });
+    
+    time += process.executeTime;
+  });
+
+  return result;
+}
+
+
+function sjf(processes) {
+  let result = [];
+  let time = 0;
+  while (processes.some(p => p.remainingTime > 0)) {
+    let readyProcesses = processes.filter(p => p.arrivalTime <= time && p.remainingTime > 0);
+    if (readyProcesses.length > 0) {
+      readyProcesses.sort((a, b) => a.remainingTime - b.remainingTime);
+      let currentProcess = readyProcesses[0];
+      result.push({ ...currentProcess, executeTime: currentProcess.remainingTime });
+      time += currentProcess.remainingTime;
+      currentProcess.remainingTime = 0;
+    } else {
+      time++;
+    }
+  }
+  return result;
+}
+
+
+
+
+function priority(processes) {
+  let result = [];
+  let time = 0;
+  while (processes.some(p => p.remainingTime > 0)) {
+    let readyProcesses = processes.filter(p => p.arrivalTime <= time && p.remainingTime > 0);
+    if (readyProcesses.length > 0) {
+      readyProcesses.sort((a, b) => a.priority - b.priority);
+      let currentProcess = readyProcesses[0];
+      result.push({ ...currentProcess, executeTime: currentProcess.remainingTime });
+      time += currentProcess.remainingTime;
+      currentProcess.remainingTime = 0;
+    } else {
+      time++;
+    }
+  }
+  return result;
 }
 
 function roundRobin(processes, quantum) {
@@ -96,22 +161,35 @@ function roundRobin(processes, quantum) {
 
   return result;
 }
+
 function srjf(processes, quantum) {
   let result = [];
   let time = 0;
-  while (processes.some(p => p.remainingTime > 0)) {
-    let readyProcesses = processes.filter(p => p.arrivalTime <= time && p.remainingTime > 0);
+  processes.sort((a, b) => a.arrivalTime - b.arrivalTime); // Initial sort by arrival time
+  var readyProcesses =processes;
+  while (readyProcesses.some(p => p.remainingTime > 0)) {
+     readyProcesses = readyProcesses.filter(p => p.arrivalTime <= time && p.remainingTime > 0);
+
     if (readyProcesses.length > 0) {
-      readyProcesses.sort((a, b) => a.remainingTime - b.remainingTime); // Sort by remaining time first, then by arrival time
+      readyProcesses.sort((a, b) => a.remainingTime - b.remainingTime);
       let currentProcess = readyProcesses[0];
       let executeTime = Math.min(currentProcess.remainingTime, quantum);
-      result.push({ ...currentProcess, executeTime });
+      
+      // Add the execution to the result
+      result.push({
+        process: currentProcess.process,
+        executeTime: executeTime,
+        startTime: time,
+        endTime: time + executeTime
+      });
+      
       currentProcess.remainingTime -= executeTime;
       time += executeTime;
     } else {
       time++;
     }
   }
+
   return result;
 }
 
@@ -119,21 +197,34 @@ function srjf(processes, quantum) {
 function preemptivePriority(processes, quantum) {
   let result = [];
   let time = 0;
-  while (processes.some(p => p.remainingTime > 0)) {
-    let readyProcesses = processes.filter(p => p.arrivalTime <= time && p.remainingTime > 0);
+  processes.sort((a, b) => a.arrivalTime - b.arrivalTime); // Sort initially by arrival time
+var readyProcesses =processes;
+  while (readyProcesses.some(p => p.remainingTime > 0)) {
+     readyProcesses = readyProcesses.filter(p => p.arrivalTime <= time && p.remainingTime > 0);
+
     if (readyProcesses.length > 0) {
-      readyProcesses.sort((a, b) => a.priority - b.priority);
-      let currentProcess = readyProcesses[0];
+      readyProcesses.sort((a, b) => a.priority - b.priority); // Sort by priority first
     
+      let currentProcess = readyProcesses[0];
       let executeTime = Math.min(currentProcess.remainingTime, quantum);
-      result.push({ ...currentProcess, executeTime });
+
+      // Add the execution to the result
+      result.push({
+        process: currentProcess.process,
+        executeTime: executeTime,
+        startTime: time,
+        endTime: time + executeTime
+      });
+
       currentProcess.remainingTime -= executeTime;
       time += executeTime;
-      processes.push(processes.shift());
+      readyProcesses.push(readyProcesses.shift());
+      
     } else {
       time++;
     }
   }
+
   return result;
 }
 
