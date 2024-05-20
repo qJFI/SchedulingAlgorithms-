@@ -19,7 +19,7 @@ function addRow() {
   
     <tr>
       <td>P${rowCount}</td>
-      <td><input type="text" value="0" /></td>
+      <td><input class="arrivalTime"  type="text" value="0" /></td>
       <td><input class="exectime" type="text"></td>
       <td class="priority-only"><input type="text"></td>
       <td><button onclick="deleteRow(this);">Delete</button></td>
@@ -48,7 +48,7 @@ function draw() {
 
   switch (selectedAlgorithm) {
     case 'fcfs':
-      processes = fcfs(processes);
+      processes =   processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
       break;
     case 'sjf':
       processes = sjf(processes);
@@ -74,29 +74,6 @@ function draw() {
 
 
 
-function fcfs(processes) {
-  let result = [];
-  let time = 0;
-
-  processes.sort((a, b) => a.arrivalTime - b.arrivalTime); // Sort by arrival time
-
-  processes.forEach(process => {
-    if (time < process.arrivalTime) {
-      time = process.arrivalTime; // Wait for the process to arrive if there's idle time
-    }
-    
-    result.push({
-      process: process.process,
-      executeTime: process.executeTime,
-      startTime: time,
-      endTime: time + process.executeTime
-    });
-    
-    time += process.executeTime;
-  });
-
-  return result;
-}
 
 
 function sjf(processes) {
@@ -165,13 +142,22 @@ function roundRobin(processes, quantum) {
 function srjf(processes, quantum) {
   let result = [];
   let time = 0;
-  processes.sort((a, b) => a.arrivalTime - b.arrivalTime); // Initial sort by arrival time
   var readyProcesses =processes;
   while (readyProcesses.some(p => p.remainingTime > 0)) {
-     readyProcesses = readyProcesses.filter(p => p.arrivalTime <= time && p.remainingTime > 0);
+     readyProcesses = readyProcesses.filter(p =>  p.remainingTime > 0);
+    let i=0;
+
 
     if (readyProcesses.length > 0) {
-      readyProcesses.sort((a, b) => a.remainingTime - b.remainingTime);
+      readyProcesses.sort((a, b) =>  a.remainingTime - b.remainingTime);
+  
+
+      while(readyProcesses[0].arrivalTime>time){
+        if(i==readyProcesses.length )
+          time++;
+      readyProcesses.push(readyProcesses.shift());
+      i++;
+      }
       let currentProcess = readyProcesses[0];
       let executeTime = Math.min(currentProcess.remainingTime, quantum);
       
@@ -200,11 +186,19 @@ function preemptivePriority(processes, quantum) {
   processes.sort((a, b) => a.arrivalTime - b.arrivalTime); // Sort initially by arrival time
 var readyProcesses =processes;
   while (readyProcesses.some(p => p.remainingTime > 0)) {
-     readyProcesses = readyProcesses.filter(p => p.arrivalTime <= time && p.remainingTime > 0);
+     readyProcesses = readyProcesses.filter(p =>  p.remainingTime > 0);
+     let i=0;
 
     if (readyProcesses.length > 0) {
       readyProcesses.sort((a, b) => a.priority - b.priority); // Sort by priority first
     
+      while(readyProcesses[0].arrivalTime>time){
+        if(i==readyProcesses.length )
+          time++;
+      readyProcesses.push(readyProcesses.shift());
+      i++;
+      }
+
       let currentProcess = readyProcesses[0];
       let executeTime = Math.min(currentProcess.remainingTime, quantum);
 
