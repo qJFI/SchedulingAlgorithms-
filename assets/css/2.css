@@ -302,6 +302,27 @@ input {
 #minus, #quantumParagraph, input[type="button"] {
   margin-top: 10px;
 }
+.queue-to-cpu, .cpu-execution {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px;
+}
+
+.process-box {
+  width: 50px;
+  height: 50px;
+  background-color: lightskyblue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.cpu-execution .process-box {
+  background-color: dodgerblue;
+}
 
 
 /* Reset for consistency */

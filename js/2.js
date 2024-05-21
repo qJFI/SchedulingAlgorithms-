@@ -35,6 +35,16 @@ function deleteRow(button) {
 }
 
 
+function animateProcess(process) {
+  // Move process from queue to CPU
+  $('#processQueueToCpu').html(`P${process.process}`).css('background-color', 'lightskyblue');
+  $('#animationQueueToCpu').fadeIn(500).delay(1000).fadeOut(500, function() {
+    // Move process to CPU for execution
+    $('#processCpuExecution').html(`P${process.process}`).css('background-color', 'dodgerblue');
+    $('#animationCpuExecution').fadeIn(500).delay(1000).fadeOut(500);
+  });
+}
+
 function draw() {
   const selectedAlgorithm = $('input[name=algorithm]:checked').val();
   const inputRows = $('#inputTable tr').not(':first');
@@ -45,8 +55,8 @@ function draw() {
     priority: parseInt($(row).find('.priority-only input').val()) || 0,
     remainingTime: parseInt($(row).find('.exectime').val()) || 0, // for preemptive algorithms
     isEnd: 0,
-    startTime:-1,
-    LstartTime:-1
+    startTime: -1,
+    LstartTime: -1
   }));
   console.log(processes);
 
@@ -70,15 +80,15 @@ function draw() {
       processes = preemptivePriority(processes, parseInt($('#quantum').val()));
       break;
   }
-
+  processes.filter(p =>  p.executeTime > 0).forEach(animateProcess); // Add this line to animate each process
   const ganttChart = generateGanttChart(processes);
   $('fresh').html(ganttChart);
 
-  const averages = calculateAverages(processes);
+  const averages = calculateAverages(processes.filter(p =>  p.executeTime > 0));
   $('#avgWaitTime').html(averages.avgWaitTime);
   $('#avgTurnaroundTime').html(averages.avgTurnaroundTime);
-  // console.log(`Average Waiting Time: ${averages.avgWaitTime}`);
-  // console.log(`Average Turnaround Time: ${averages.avgTurnaroundTime}`);
+
+  
 
   animate();
 }

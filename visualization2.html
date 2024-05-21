@@ -79,6 +79,14 @@
   
   <div id="processTimes" style="margin-top: 20px;"></div>
 
+  <div id="animationQueueToCpu" class="queue-to-cpu">
+    <p>Shedulig queue to cpu</p>
+    <div id="processQueueToCpu" class="process-box"></div>
+  </div>
+  <div id="animationCpuExecution" class="cpu-execution">
+    <p>Execution completed</p>
+    <div id="processCpuExecution" class="process-box"></div>
+  </div>
 
   <div style="margin-top: 300px;">
   <table  class="inputTable" id="resultTable">
@@ -90,6 +98,8 @@
     handleAlgorithmChange();
   });
   </script>
+
+
 
   <div class="processTimes" id="processTimes" style="margin-top: 20px;"></div>
 </body>
