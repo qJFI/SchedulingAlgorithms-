@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/2.css">
   <title>Document</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="js/2.js"></script>
 </head>
 <body>
@@ -49,7 +50,6 @@
       <tr>
         <td>P0</td>
         <td><input class="initial arrivalTime" type="text" value="0" /></td>
-        <!-- <td>0</td> -->
         <td><input class="initial exectime" type="text" value="5" /></td>
         <td class="priority-only initial"><input type="text"/></td>
         <td><button onclick="deleteRow(this);">Delete</button></td>
@@ -57,7 +57,6 @@
       <tr>
         <td>P1</td>
         <td><input class="initial arrivalTime" type="text" value="0" /></td>
-        <!-- <td>1</td> -->
         <td><input class="initial exectime" value="3" /></td>
         <td class="priority-only"><input type="text"/></td>
         <td><button onclick="deleteRow(this);">Delete</button></td>
@@ -77,13 +76,12 @@
     <h4>Average Waiting Time: <span id="avgWaitTime"></span> ms</h4>
     <h4>Average Turnaround Time: <span id="avgTurnaroundTime"></span> ms</h4>
   </div>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="js/2.js"></script>
+  <div id="processTimes" style="margin-top: 20px;"></div>
   <script>
   $(document).ready(function () {
-  $('input[type=radio][name=algorithm]').change(handleAlgorithmChange);
-  handleAlgorithmChange();
-});
+    $('input[type=radio][name=algorithm]').change(handleAlgorithmChange);
+    handleAlgorithmChange();
+  });
   </script>
 </body>
 </html>

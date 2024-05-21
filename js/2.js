@@ -34,6 +34,7 @@ function deleteRow(button) {
   $(button).closest('tr').remove();
 }
 
+
 function draw() {
   const selectedAlgorithm = $('input[name=algorithm]:checked').val();
   const inputRows = $('#inputTable tr').not(':first');
@@ -42,13 +43,16 @@ function draw() {
     arrivalTime: parseInt($(row).find('.arrivalTime').val()) || 0,
     executeTime: parseInt($(row).find('.exectime').val()) || 0,
     priority: parseInt($(row).find('.priority-only input').val()) || 0,
-    remainingTime: parseInt($(row).find('.exectime').val()) || 0 // for preemptive algorithms
+    remainingTime: parseInt($(row).find('.exectime').val()) || 0, // for preemptive algorithms
+    isEnd: 0,
+    startTime:-1,
+    LstartTime:-1
   }));
   console.log(processes);
 
   switch (selectedAlgorithm) {
     case 'fcfs':
-      processes =   processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+      processes = fcfs(processes);
       break;
     case 'sjf':
       processes = sjf(processes);
@@ -69,9 +73,45 @@ function draw() {
 
   const ganttChart = generateGanttChart(processes);
   $('fresh').html(ganttChart);
+
+  const averages = calculateAverages(processes);
+  $('#avgWaitTime').html(averages.avgWaitTime);
+  $('#avgTurnaroundTime').html(averages.avgTurnaroundTime);
+  console.log(`Average Waiting Time: ${averages.avgWaitTime}`);
+  console.log(`Average Turnaround Time: ${averages.avgTurnaroundTime}`);
+
   animate();
 }
 
+
+function fcfs(processes) {
+  processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+
+  let time = 0;
+  let result = [];
+
+  processes.forEach(process => {
+    if (time < process.arrivalTime) { //for the first process to work
+      time = process.arrivalTime;
+    }
+
+    result.push({
+      ...process,
+      isEnd:1,
+      startTime:time,
+      endTime: time +  process.executeTime,
+  
+    });
+
+    time += process.executeTime;
+    process.endTime = time;
+
+    
+    
+  });
+
+  return result;
+}
 
 
 
@@ -84,9 +124,16 @@ function sjf(processes) {
     if (readyProcesses.length > 0) {
       readyProcesses.sort((a, b) => a.remainingTime - b.remainingTime);
       let currentProcess = readyProcesses[0];
-      result.push({ ...currentProcess, executeTime: currentProcess.remainingTime });
       time += currentProcess.remainingTime;
+    
+      result.push({ 
+        ...currentProcess,
+          isEnd:1,
+          startTime :time - currentProcess.remainingTime,
+          endTime :time
+        });
       currentProcess.remainingTime = 0;
+      currentProcess.endTime = time;
     } else {
       time++;
     }
@@ -105,8 +152,14 @@ function priority(processes) {
     if (readyProcesses.length > 0) {
       readyProcesses.sort((a, b) => a.priority - b.priority);
       let currentProcess = readyProcesses[0];
-      result.push({ ...currentProcess, executeTime: currentProcess.remainingTime });
+    
       time += currentProcess.remainingTime;
+      endTime=time;
+      result.push({ 
+        ...currentProcess,
+        startTime :time - currentProcess.remainingTime,
+         isEnd:1,
+           endTime });
       currentProcess.remainingTime = 0;
     } else {
       time++;
@@ -122,14 +175,40 @@ function roundRobin(processes, quantum) {
 
   while (queue.length > 0) {
     const process = queue.shift();
+    var LstartTime=-1;
+    result.forEach(p => {
+      if(p.process ==process.process){
+       LstartTime = p.startTime +quantum;
+      }
+    });
+
     if (process.arrivalTime <= time) {
       if (process.remainingTime > quantum) {
-        result.push({ ...process, executeTime: quantum });
+      
         queue.push({ ...process, remainingTime: process.remainingTime - quantum });
         time += quantum;
+        endTime=time;
+        result.push({
+           ...process,
+           startTime:time-quantum,
+        
+           LstartTime,
+           remainingTime:process.remainingTime - quantum,
+          executeTime: quantum,
+           endTime 
+          });
+        
       } else {
-        result.push({ ...process, executeTime: process.remainingTime });
+      
         time += process.remainingTime;
+        endTime=time;
+        result.push({ ...process,
+          startTime:time-process.remainingTime,
+          LstartTime,
+          isEnd :1,
+           executeTime: process.remainingTime, endTime 
+          });
+          console.log("this is start :" +LstartTime);
       }
     } else {
       queue.push(process);
@@ -158,18 +237,36 @@ function srjf(processes, quantum) {
       readyProcesses.push(readyProcesses.shift());
       i++;
       }
+
+    
       let currentProcess = readyProcesses[0];
+
+      var LstartTime=-1;
+      result.forEach(p => {
+        if(p.process ==currentProcess.process){
+         LstartTime = p.startTime +quantum;
+        }
+      });
+
       let executeTime = Math.min(currentProcess.remainingTime, quantum);
       
+      let isEnd=1;
+      if(currentProcess.remainingTime>quantum){
+        isEnd=0;
+      }
+
+      currentProcess.remainingTime -= executeTime;
       // Add the execution to the result
       result.push({
-        process: currentProcess.process,
+        ...currentProcess,
         executeTime: executeTime,
-        startTime: time,
+        startTime:time,
+        LstartTime,
+        isEnd,
         endTime: time + executeTime
       });
       
-      currentProcess.remainingTime -= executeTime;
+      
       time += executeTime;
     } else {
       time++;
@@ -202,15 +299,29 @@ var readyProcesses =processes;
       let currentProcess = readyProcesses[0];
       let executeTime = Math.min(currentProcess.remainingTime, quantum);
 
+      var LstartTime=-1;
+      result.forEach(p => {
+        if(p.process ==currentProcess.process){
+         LstartTime = p.startTime +quantum;
+        }
+      });
+
+      let isEnd=1;
+      if(currentProcess.remainingTime>quantum){
+        isEnd=0;
+      }
       // Add the execution to the result
+      currentProcess.remainingTime -= executeTime;
       result.push({
-        process: currentProcess.process,
-        executeTime: executeTime,
+        ...currentProcess,
+        LstartTime,
         startTime: time,
+        executeTime: executeTime,
+        isEnd,
         endTime: time + executeTime
       });
 
-      currentProcess.remainingTime -= executeTime;
+    
       time += executeTime;
       readyProcesses.push(readyProcesses.shift());
       
@@ -259,4 +370,49 @@ function animationStep(steps, cur) {
       animationStep(steps, cur + 1);
     }, 500);
   }
+}
+
+function calculateAverages(processes) {
+  let totalWaitTime = 0;
+  let totalTurnaroundTime = 0;
+  var waitTime ,turnaroundTime;
+  console.log(processes);
+  processes.forEach(process => {
+    if(process.startTime!=-1){ 
+       turnaroundTime = process.endTime - process.startTime;
+       
+    }
+    else
+    {
+       turnaroundTime = process.endTime - process.arrivalTime;
+
+    }
+
+    if(process.LstartTime==-1){
+    
+      waitTime = process.startTime -process.arrivalTime;
+   }
+   else
+   {
+    
+    waitTime = process.startTime -process.LstartTime;
+   }
+   console.log(process.LstartTime ,process.startTime, process.arrivalTime );
+
+    console.log(turnaroundTime);
+    console.log(waitTime);
+    totalWaitTime += waitTime;
+    if(process.isEnd==1){
+    totalTurnaroundTime += turnaroundTime;
+  }
+    
+    process.turnaroundTime = turnaroundTime; // Storing for reference
+    process.waitTime = waitTime; // Storing for reference
+  });
+  console.log(totalTurnaroundTime);
+  console.log(processes);
+  const avgWaitTime = totalWaitTime / processes.filter(p =>  p.isEnd > 0).length;
+  const avgTurnaroundTime = totalTurnaroundTime / processes.filter(p =>  p.isEnd > 0).length;
+
+  return { avgWaitTime, avgTurnaroundTime };
 }
