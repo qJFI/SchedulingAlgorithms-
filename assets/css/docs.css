@@ -1,80 +1,54 @@
-
-.container_docs{
-    /* border: 2px solid black; */
-    height: auto;
-    transition:0.5s  ease-in-out;
-    padding-top:50px;
-    text-align: center;
-    background-color:#64CCAF;
-    border-radius: 20px;
-    width: 80%;
-
-    margin-top: 50px;
-    margin-bottom: 10px;
-}
-
-.right_container_docs{
+.container_docs, .right_container_docs {
   height: auto;
-  transition:0.5s  ease-in-out;
-  padding-top:50px;
+  transition: 0.5s ease-in-out;
+  padding-top: 50px;
   text-align: center;
-  background-color:#64CCAF;
+  background-color: #64CCAF;
   border-radius: 20px;
   width: 80%;
-  margin-left: auto;
   margin-top: 50px;
   margin-bottom: 10px;
-  
+  position: relative;
 }
 
-.container_docs h1,.right_container_docs h1
-{
-    font-size: 36px;
-    margin-top: 10px;
-    font-weight: 600;
+.container_docs {
+  transform: translateX(-50%);
 }
 
-.container_docs p ,.right_container_docs p
-{
-    margin-left: 5px;
-    text-align: left;
-    margin-top: 15px;
-    font-size: medium;
-    padding-bottom: 50px;
-    line-height : 30px;
+.right_container_docs {
+  transform: translateX(50%);
 }
 
-.container_docs li ,.right_container_docs li
-{
-    text-align: left;
-    line-height: normal;
-    margin-left: 15px;
+.in-view {
+  transform: translateX(0) !important;
 }
 
-.special li{
-    line-height: 25px;
-    padding-top: 20px;
+.container_docs h1, .right_container_docs h1 {
+  font-size: 36px;
+  margin-top: 10px;
+  font-weight: 600;
 }
 
-.container_docs blod , .right_container_docs blod{
-    font-weight: 900;
+.container_docs p, .right_container_docs p {
+  margin-left: 5px;
+  text-align: left;
+  margin-top: 15px;
+  font-size: medium;
+  padding-bottom: 50px;
+  line-height: 30px;
 }
 
-.container_docs:hover{
-  transition:0.5s 0.1s ease-in-out;
-
-    box-shadow: 0 0 20px 0px #64CCAF;
-  
-    translate: 170px;
-    
+.container_docs li, .right_container_docs li {
+  text-align: left;
+  line-height: normal;
+  margin-left: 15px;
 }
 
-.right_container_docs:hover{
-  transition:0.5s 0.1s ease-in-out;
-
-    box-shadow: 0 0 20px 0px #64CCAF;
-    translate: -170px;
-    
+.special li {
+  line-height: 25px;
+  padding-top: 20px;
 }
 
-
+.container_docs blod, .right_container_docs blod {
+  font-weight: 900;
+}
