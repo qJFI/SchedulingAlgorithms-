@@ -6,9 +6,9 @@ document.write(`<nav>
       <ul>
           <li><a href="index.html">HOME</a></li>
           <li><a href="docs.html">DOCS</a></li>
-          <li><a href="./ganttcharts.html">SIMULATOR</a></li>
+      
           
-          <li><a href="./visualization2.html">SIMULATOR2</a></li>
+          <li><a href="./visualization2.html">SIMULATOR</a></li>
       </ul>
   </div>
   <i class="fas fa-bars" onclick="showMenu()"></i>
