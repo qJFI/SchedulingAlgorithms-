@@ -76,12 +76,20 @@
     <h4>Average Waiting Time: <span id="avgWaitTime"></span> ms</h4>
     <h4>Average Turnaround Time: <span id="avgTurnaroundTime"></span> ms</h4>
   </div>
+  
   <div id="processTimes" style="margin-top: 20px;"></div>
   <script>
+
+  <div style="margin-top: 300px;">
+  <table  class="inputTable" id="resultTable"/>
+
+  </div>
   $(document).ready(function () {
     $('input[type=radio][name=algorithm]').change(handleAlgorithmChange);
     handleAlgorithmChange();
   });
   </script>
+
+  <div class="processTimes" id="processTimes" style="margin-top: 20px;"></div>
 </body>
 </html>

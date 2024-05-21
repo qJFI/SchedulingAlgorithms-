@@ -77,8 +77,8 @@ function draw() {
   const averages = calculateAverages(processes);
   $('#avgWaitTime').html(averages.avgWaitTime);
   $('#avgTurnaroundTime').html(averages.avgTurnaroundTime);
-  console.log(`Average Waiting Time: ${averages.avgWaitTime}`);
-  console.log(`Average Turnaround Time: ${averages.avgTurnaroundTime}`);
+  // console.log(`Average Waiting Time: ${averages.avgWaitTime}`);
+  // console.log(`Average Turnaround Time: ${averages.avgTurnaroundTime}`);
 
   animate();
 }
@@ -376,7 +376,8 @@ function calculateAverages(processes) {
   let totalWaitTime = 0;
   let totalTurnaroundTime = 0;
   var waitTime ,turnaroundTime;
-  console.log(processes);
+  // console.log(processes);
+  let newRow = "";
   processes.forEach(process => {
     if(process.startTime!=-1){ 
        turnaroundTime = process.endTime - process.startTime;
@@ -397,18 +398,46 @@ function calculateAverages(processes) {
     
     waitTime = process.startTime -process.LstartTime;
    }
-   console.log(process.LstartTime ,process.startTime, process.arrivalTime );
+  //  console.log("LstartTime" ,"startTime", "arrivalTime" );
+  //  console.log(process.LstartTime ,process.startTime, process.arrivalTime );
 
-    console.log(turnaroundTime);
-    console.log(waitTime);
+  //   console.log(turnaroundTime);
+  //   console.log(waitTime);
     totalWaitTime += waitTime;
-    if(process.isEnd==1){
-    totalTurnaroundTime += turnaroundTime;
-  }
-    
     process.turnaroundTime = turnaroundTime; // Storing for reference
     process.waitTime = waitTime; // Storing for reference
+    
+    if(process.isEnd==1){
+      
+        var processWaitTime =0;
+        processes.forEach(p => {
+          if(p.process ==process.process){
+            console.log(p.waitTime);
+            processWaitTime += p.waitTime;
+          }
+        });
+
+       newRow += `
+    
+      <table class="inputTable" id="resultTable">
+    <tr>
+      <td>${process.process}</td>
+      <td>${processWaitTime}</td>
+      <td>${process.endTime - process.arrivalTime}</td>
+    
+    </tr>
+    </table>
+  `;
+  console.log(newRow);
+
+    totalTurnaroundTime += process.endTime - process.arrivalTime;
+  
+  }
+
+  
   });
+  $('#processTimes').html(newRow);
+  
   console.log(totalTurnaroundTime);
   console.log(processes);
   const avgWaitTime = totalWaitTime / processes.filter(p =>  p.isEnd > 0).length;
